@@ -25,7 +25,7 @@ public:
 
     RadiativeCorrections(double cut_off_min, double cut_off_max);
     double Compute_cs_correction_factor(double Inv_Mass);
-    void Soft_Photon_Emission(TLorentzVector&, TLorentzVector&, TLorentzVector&);
+    void Soft_Photon_Emission(TLorentzVector&, TLorentzVector&, TLorentzVector&, TLorentzVector&);
     virtual ~RadiativeCorrections();
 
 private:

@@ -69,7 +69,8 @@ double  RadiativeCorrections::Compute_cs_correction_factor(double Inv_Mass)
   return cs_correction_factor;
 };
 
-void RadiativeCorrections::Soft_Photon_Emission(TLorentzVector &Electron, TLorentzVector &Positron, TLorentzVector &Rad_Photon)
+//Old version with emmision along one lepton
+/*void RadiativeCorrections::Soft_Photon_Emission(TLorentzVector &Electron, TLorentzVector &Positron, TLorentzVector &Rad_Photon)
 {
 
   /// use pointer instead to modify electron or positron
@@ -100,7 +101,76 @@ void RadiativeCorrections::Soft_Photon_Emission(TLorentzVector &Electron, TLoren
     Positron = Lepton_Radiated;
 
   return;
+}*/
+
+
+//////// V2 //////////////////
+/*void RadiativeCorrections::Soft_Photon_Emission(TLorentzVector &Electron, TLorentzVector &Positron, TLorentzVector &Rad_Photon_1, TLorentzVector &Rad_Photon_2)
+{
+
+  /// use pointer instead to modify electron or positron
+  double me = 0.00051;
+  TRandom3 rand;
+  rand.SetSeed(0); // to be checked
+
+  double M_lepton_pair = (Electron + Positron).M();
+
+  TF1 *cs_emmision_photon_func = new TF1("cs_emmision_photon_func", cs_emmision_photon, cut_off_min, cut_off_max, 2);
+  cs_emmision_photon_func->SetParameter(1, M_lepton_pair);
+  double E_s = cs_emmision_photon_func->GetRandom();
+
+  ////// Randomly choose theta and phi of the radiated photon
+  double theta_radiated = rand.Uniform(0,PI);
+  double phi_radiated = rand.Uniform(0,2.*PI);
+
+  //Rad_Photon.SetXYZM(E_s * cos(phi_radiated) * sin(theta_radiated), E_s * sin(phi_radiated) * sin(theta_radiated), E_s * cos(theta_radiated), 0.0);
+
+  double frac_energy = rand.Uniform(0.,1.); //Uniformly draw a fraction of energy radited by the electron
+
+  Rad_Photon_1.SetXYZM(E_s * frac_energy * cos(phi_radiated) * sin(theta_radiated), E_s * frac_energy * sin(phi_radiated) * sin(theta_radiated), E_s * frac_energy * cos(theta_radiated), 0.0);
+  Rad_Photon_2.SetXYZM(E_s * (1.-frac_energy) * cos(phi_radiated) * sin(theta_radiated), E_s * (1.-frac_energy) * sin(phi_radiated) * sin(theta_radiated), E_s * (1.-frac_energy) * cos(theta_radiated), 0.0);
+
+  Electron = Electron - Rad_Photon_1;
+  Positron = Positron - Rad_Photon_2;
+
+  return;
+}*/
+
+
+void RadiativeCorrections::Soft_Photon_Emission(TLorentzVector &Electron, TLorentzVector &Positron, TLorentzVector &Rad_Photon_1, TLorentzVector &Rad_Photon_2)
+{
+
+  /// use pointer instead to modify electron or positron
+  double me = 0.00051;
+  TRandom3 rand;
+  rand.SetSeed(0); // to be checked
+
+  double M_lepton_pair = (Electron + Positron).M();
+
+  TF1 *cs_emmision_photon_func = new TF1("cs_emmision_photon_func", cs_emmision_photon, cut_off_min, cut_off_max, 2);
+  cs_emmision_photon_func->SetParameter(1, M_lepton_pair);
+  double E_s = cs_emmision_photon_func->GetRandom();
+
+  ////// Randomly choose theta and phi of the radiated photon
+  double theta_radiated_1 = rand.Uniform(0,PI);
+  double phi_radiated_1 = rand.Uniform(0,2.*PI);
+
+  double theta_radiated_2 = rand.Uniform(0,PI);
+  double phi_radiated_2 = rand.Uniform(0,2.*PI);
+
+  //Rad_Photon.SetXYZM(E_s * cos(phi_radiated) * sin(theta_radiated), E_s * sin(phi_radiated) * sin(theta_radiated), E_s * cos(theta_radiated), 0.0);
+
+  double frac_energy = rand.Uniform(0.,1.); //Uniformly draw a fraction of energy radited by the electron
+
+  Rad_Photon_1.SetXYZM(E_s * frac_energy * cos(phi_radiated_1) * sin(theta_radiated_1), E_s * frac_energy * sin(phi_radiated_1) * sin(theta_radiated_1), E_s * frac_energy * cos(theta_radiated_1), 0.0);
+  Rad_Photon_2.SetXYZM(E_s * (1.-frac_energy) * cos(phi_radiated_2) * sin(theta_radiated_2), E_s * (1.-frac_energy) * sin(phi_radiated_2) * sin(theta_radiated_2), E_s * (1.-frac_energy) * cos(theta_radiated_2), 0.0);
+
+  Electron = Electron - Rad_Photon_1;
+  Positron = Positron - Rad_Photon_2;
+
+  return;
 }
+
 
 RadiativeCorrections::~RadiativeCorrections()
 {
