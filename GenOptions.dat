@@ -5,7 +5,7 @@ tLim     -6.0
 lTarg    5.0
 EgMin    4
 EgMax    10.6
-vzMax    
+vzMax    2.5
 vzMin    -2.5
 Q2Cut    0.02
 tSlope   1.13
