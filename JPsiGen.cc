@@ -259,14 +259,14 @@ int main()
             cout.flush() << "Processed " << i << " events, approximetely " << double(100. * i / double(Nsim)) << "%\r";
         }
 
-        //        if ((i + 1) % n_perfile == 0) {
-        //            if (isLund) {
-        //                Lund_out.close();
-        //                file_number++;
-        //                //Lund_out.open(Form("JPsi_gen_%d.txt", file_number), ofstream::out);
-        //                Lund_out.open(Form("JPsi_gen_%d.txt", file_number), ofstream::out);
-        //            }
-        //        }
+                if ((i + 1) % n_perfile == 0) {
+                    if (isLund) {
+                        Lund_out.close();
+                       file_number++;
+      	                //Lund_out.open(Form("JPsi_gen_%d.txt", file_number), ofstream::out);
+                        Lund_out.open(Form("JPsi_gen_%d.txt", file_number), ofstream::out);
+                    }
+                }
 
         Q2 = MJPsi * MJPsi;
 
@@ -412,6 +412,7 @@ int main()
             E_rad_ep = L_rad_2.E();
 
             Inv_Mass = (L_em + L_ep).M();
+            //cout<<Inv_Mass-sqrt((L_em + L_ep).M2())<<endl;
 
             double tot_weight = crs_JPsi * psf * flux_factor;
 
@@ -427,11 +428,11 @@ int main()
                 Lund_out << 1 << setw(5) << 1 << setw(5) << 1 << setw(7) << 2212 << setw(5) << 0 << setw(5) << 0 << setw(15) << px_prot << setw(15) << py_prot << setw(15) << pz_prot;
                 Lund_out << setw(15) << L_prot.E() << setw(15) << Mp << setw(15) << 0. << setw(15) << 0. << setw(15) << vz << endl;
                 // Writing Electron
-                Lund_out << 2 << setw(5) << -1 << setw(5) << 1 << setw(7) << 11 << setw(5) << 0 << setw(5) << 0 << setw(15) << px_ep << setw(15) << py_ep << setw(15) << pz_ep;
-                Lund_out << setw(15) << L_em.E() << setw(15) << Me << setw(15) << 0. << setw(15) << 0. << setw(15) << vz << endl;
+                Lund_out << 2 << setw(5) << -1 << setw(5) << 1 << setw(7) << 11 << setw(5) << 0 << setw(5) << 0 << setw(15) << px_em << setw(15) << py_em << setw(15) << pz_em;
+                Lund_out << setw(15) << E_em << setw(15) << Me << setw(15) << 0. << setw(15) << 0. << setw(15) << vz << endl;
                 // Writing Positron
-                Lund_out << 3 << setw(5) << 1 << setw(5) << 1 << setw(7) << -11 << setw(5) << 0 << setw(5) << 0 << setw(15) << px_em << setw(15) << py_em << setw(15) << pz_em;
-                Lund_out << setw(15) << L_ep.E() << setw(15) << Me << setw(15) << 0. << setw(15) << 0. << setw(15) << vz << endl;
+                Lund_out << 3 << setw(5) << 1 << setw(5) << 1 << setw(7) << -11 << setw(5) << 0 << setw(5) << 0 << setw(15) << px_ep << setw(15) << py_ep << setw(15) << pz_ep;
+                Lund_out << setw(15) << E_ep << setw(15) << Me << setw(15) << 0. << setw(15) << 0. << setw(15) << vz << endl;
                 Lund_out << 4 << setw(5) << 0 << setw(5) << 1 << setw(7) << 22 << setw(5) << 0 << setw(5) << 0 << setw(15) << px_rad_em << setw(15) << py_rad_em << setw(15) << pz_rad_em;
                 Lund_out << setw(15) << E_rad_em << setw(15) << 0.0 << setw(15) << 0. << setw(15) << 0. << setw(15) << vz << endl;
                 Lund_out << 5 << setw(5) << 0 << setw(5) << 1 << setw(7) << 22 << setw(5) << 0 << setw(5) << 0 << setw(15) << px_rad_ep << setw(15) << py_rad_ep << setw(15) << pz_rad_ep;
