@@ -69,8 +69,8 @@ double  RadiativeCorrections::Compute_cs_correction_factor(double Inv_Mass)
   return cs_correction_factor;
 };
 
-//Old version with emmision along one lepton
-/*void RadiativeCorrections::Soft_Photon_Emission(TLorentzVector &Electron, TLorentzVector &Positron, TLorentzVector &Rad_Photon)
+/*//Old version with emmision along one lepton
+void RadiativeCorrections::Soft_Photon_Emission(TLorentzVector &Electron, TLorentzVector &Positron, TLorentzVector &Rad_Photon, TLorentzVector &Rad_Photon1)
 {
 
   /// use pointer instead to modify electron or positron
@@ -93,7 +93,11 @@ double  RadiativeCorrections::Compute_cs_correction_factor(double Inv_Mass)
   double phi_radiated = Lepton_Radiated.Phi();
 
   Rad_Photon.SetXYZM(E_s * cos(phi_radiated) * sin(theta_radiated), E_s * sin(phi_radiated) * sin(theta_radiated), E_s * cos(theta_radiated), 0.0);
-  Lepton_Radiated = Lepton_Radiated - Rad_Photon;
+
+  double momentum_lepton_after_rad =  sqrt(pow(Lepton_Radiated.E()-E_s,2)-me*me);
+  Lepton_Radiated.SetXYZM(momentum_lepton_after_rad * cos(phi_radiated) * sin(theta_radiated), momentum_lepton_after_rad * sin(phi_radiated) * sin(theta_radiated), momentum_lepton_after_rad * cos(theta_radiated), me);
+
+  //Lepton_Radiated = Lepton_Radiated - Rad_Photon;
 
   if (Choice_of_lepton == 0)
     Electron = Lepton_Radiated;
@@ -152,11 +156,11 @@ void RadiativeCorrections::Soft_Photon_Emission(TLorentzVector &Electron, TLoren
   double E_s = cs_emmision_photon_func->GetRandom();
 
   ////// Randomly choose theta and phi of the radiated photon
-  double theta_radiated_1 = rand.Uniform(0,PI);
-  double phi_radiated_1 = rand.Uniform(0,2.*PI);
+  double theta_radiated_1 = Electron.Theta();
+  double phi_radiated_1 = Electron.Phi();
 
-  double theta_radiated_2 = rand.Uniform(0,PI);
-  double phi_radiated_2 = rand.Uniform(0,2.*PI);
+  double theta_radiated_2 = Positron.Theta();
+  double phi_radiated_2 = Positron.Phi();
 
   //Rad_Photon.SetXYZM(E_s * cos(phi_radiated) * sin(theta_radiated), E_s * sin(phi_radiated) * sin(theta_radiated), E_s * cos(theta_radiated), 0.0);
 
@@ -165,8 +169,15 @@ void RadiativeCorrections::Soft_Photon_Emission(TLorentzVector &Electron, TLoren
   Rad_Photon_1.SetXYZM(E_s * frac_energy * cos(phi_radiated_1) * sin(theta_radiated_1), E_s * frac_energy * sin(phi_radiated_1) * sin(theta_radiated_1), E_s * frac_energy * cos(theta_radiated_1), 0.0);
   Rad_Photon_2.SetXYZM(E_s * (1.-frac_energy) * cos(phi_radiated_2) * sin(theta_radiated_2), E_s * (1.-frac_energy) * sin(phi_radiated_2) * sin(theta_radiated_2), E_s * (1.-frac_energy) * cos(theta_radiated_2), 0.0);
 
-  Electron = Electron - Rad_Photon_1;
-  Positron = Positron - Rad_Photon_2;
+
+  double momentum_electron_after_rad =  sqrt(pow(Electron.E()-(frac_energy)*E_s,2)-me*me);
+  double momentum_positron_after_rad =  sqrt(pow(Positron.E()-(1.-frac_energy) *E_s,2)-me*me);
+
+  Electron.SetXYZM(momentum_electron_after_rad * cos(phi_radiated_1) * sin(theta_radiated_1), momentum_electron_after_rad * sin(phi_radiated_1) * sin(theta_radiated_1), momentum_electron_after_rad * cos(theta_radiated_1), me);
+  Positron.SetXYZM(momentum_positron_after_rad * cos(phi_radiated_2) * sin(theta_radiated_2), momentum_positron_after_rad * sin(phi_radiated_2) * sin(theta_radiated_2), momentum_positron_after_rad * cos(theta_radiated_2), me);
+
+  //Electron = Electron - Rad_Photon_1;
+  //Positron = Positron - Rad_Photon_2;
 
   return;
 }

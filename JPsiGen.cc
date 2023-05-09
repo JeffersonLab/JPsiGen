@@ -316,12 +316,12 @@ int main()
             L_em.SetPxPyPzE(Pl * sin_th * cos(phi_cm), Pl * sin_th * sin(phi_cm), Pl * cos_th, El);
             L_ep.SetPxPyPzE(-Pl * sin_th * cos(phi_cm), -Pl * sin_th * sin(phi_cm), -Pl * cos_th, El);
 
-            /*cout<<" "<<endl;
+            cout<<" "<<endl;
             cout<<"New Event "<<endl;
             cout<<"Before radiation"<<endl;
             cout<<"P electron"<<L_em.P()<<" E electron "<<L_em.E()<<endl;
             cout<<"P positron"<<L_ep.P()<<" E positron "<<L_ep.E()<<endl;
-*/
+
 
             bool in_rad_tail = (rand.Uniform(0, 1) > Rad_corr_1.Compute_cs_correction_factor(sqrt(Q2))); // randomly choose if the photon is above cut_off_min
             // if(Rad_corr && in_rad_tail)
@@ -338,10 +338,12 @@ int main()
             //cout<<(L_em+L_ep+L_rad_1+L_rad_2).P()<<endl;
             // cout<<Rad_corr_1.Compute_cs_correction_factor(sqrt(Q2))<<endl;
 
-            /*cout<<"After radiation"<<endl;
-            cout<<"P electron"<<L_em.P()<<" E electron "<<L_em.E()<<endl;
-            cout<<"P positron"<<L_ep.P()<<" E positron "<<L_ep.E()<<endl;
-            cout<<"E photon"<<L_rad.P()<<endl;*/
+            cout<<"After radiation"<<endl;
+            cout<<"P electron"<<L_em.P()<<" M electron "<<L_em.M()<<endl;
+            cout<<"P positron"<<L_ep.P()<<" M positron "<<L_ep.M()<<endl;
+            cout<<"M total "<<(L_rad_1+L_rad_2+L_em+L_ep).M()<<endl;
+            cout<<"P total "<<(L_rad_1+L_rad_2+L_em+L_ep).P()<<endl;
+
 
             L_em.RotateY(th_qprime); // Rotate in order to get Z axis be antiparallel to the p_prime direction in the CM frame
             L_ep.RotateY(th_qprime); // Rotate in order to get Z axis be antiparallel to the p_prime direction in the CM frame
