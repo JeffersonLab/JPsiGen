@@ -1,9 +1,13 @@
-Nsim     100000
+Nsim     200000
 NPerFile 10000
 Eb       10.6
 tLim     -6.0
 lTarg    5.0
 EgMin    4
 EgMax    10.6
+vzMax    2.5
+vzMin    -2.5
 Q2Cut    0.02
-LUND     0
+tSlope   1.13
+LUND     1
+Seed     0
