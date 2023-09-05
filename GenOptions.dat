@@ -1,5 +1,5 @@
-Nsim     2000
-NPerFile 1000
+Nsim     100000
+NPerFile 10000
 Eb       10.6
 tLim     -6.0
 lTarg    5.0

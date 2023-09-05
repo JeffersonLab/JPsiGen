@@ -128,10 +128,6 @@ int main()
         {
             rad_cut_off_min = atof(val.c_str());
         }
-        else if (key.compare("rad_cut_off_max") == 0)
-        {
-            rad_cut_off_max = atof(val.c_str());
-        }
     }
 
     cout << "Nsim = " << Nsim << endl;
@@ -146,7 +142,6 @@ int main()
     cout << "IsLund = " << isLund << endl;
     cout << "Rad_corr = " << Rad_corr << endl;
     cout << "rad_cut_off_min = " << rad_cut_off_min << endl;
-    cout << "rad_cut_off_max = " << rad_cut_off_max << endl;
     cout << "**************************************************" << endl;
     cout << "*******"
          << " RandomSeedActuallyUsed: " << seed << " *******" << endl;
@@ -174,7 +169,6 @@ int main()
     f_JPsi_dsigm_dt->SetParameter(1, SLAC_Fit_scale);
     f_JPsi_dsigm_dt->SetParameter(2, tSlope);
 
-    TTCSKine tcs_kin1(Mp, Eb);
 
     TLorentzVector target(0., 0., 0., Mp);
     TLorentzVector Lcm;
@@ -208,7 +202,8 @@ int main()
     double px_rad_em, py_rad_em, pz_rad_em, E_rad_em;
     double px_rad_ep, py_rad_ep, pz_rad_ep, E_rad_ep;
     double px_rad, py_rad, pz_rad, E_rad;
-    double E_rad_cm;
+    double Theta_rad, Phi_rad, Angle_g_lep;
+    double E_rad_cm, Theta_rad_cm, Phi_rad_cm, Angle_g_lep_cm;
     double Inv_Mass;
 
     TTree *tr1 = new TTree("tr1", "TCS MC events");
@@ -246,9 +241,16 @@ int main()
     tr1->Branch("E_rad_cm", &E_rad_cm, "E_rad_cm/D");
     tr1->Branch("Inv_Mass", &Inv_Mass, "Inv_Mass/D");
 
-    /////////////Set Rad Corr Parameters//////////////
-    RadiativeCorrections Rad_corr_1(rad_cut_off_min, rad_cut_off_max);
+    tr1->Branch("Theta_rad", &Theta_rad, "Theta_rad/D");
+    tr1->Branch("Phi_rad", &Phi_rad, "Phi_rad/D");
+    tr1->Branch("Angle_g_lep", &Angle_g_lep, "Angle_g_lep/D");
 
+    tr1->Branch("Theta_rad_cm", &Theta_rad_cm, "Theta_rad_cm/D");
+    tr1->Branch("Phi_rad_cm", &Phi_rad_cm, "Phi_rad_cm/D");
+    tr1->Branch("Angle_g_lep_cm", &Angle_g_lep_cm, "Angle_g_lep_cm/D");
+
+    /////////////Set Rad Corr Parameters//////////////
+    RadiativeCorrections Rad_corr_1(rad_cut_off_min);
     /////////////////////////////////////////////////
 
     for (int i = 0; i < Nsim; i++)
@@ -259,14 +261,16 @@ int main()
             cout.flush() << "Processed " << i << " events, approximetely " << double(100. * i / double(Nsim)) << "%\r";
         }
 
-                if ((i + 1) % n_perfile == 0) {
-                    if (isLund) {
-                        Lund_out.close();
-                       file_number++;
-      	                //Lund_out.open(Form("JPsi_gen_%d.txt", file_number), ofstream::out);
-                        Lund_out.open(Form("JPsi_gen_%d.txt", file_number), ofstream::out);
-                    }
-                }
+        if ((i + 1) % n_perfile == 0)
+        {
+            if (isLund)
+            {
+                Lund_out.close();
+                file_number++;
+                // Lund_out.open(Form("JPsi_gen_%d.txt", file_number), ofstream::out);
+                Lund_out.open(Form("JPsi_gen_%d.txt", file_number), ofstream::out);
+            }
+        }
 
         Q2 = MJPsi * MJPsi;
 
@@ -307,6 +311,8 @@ int main()
             double psf_phi_cm = 2 * PI;
 
             double cos_th = rand.Uniform(-1., -1 + psf_cos_th);
+            // double theta_cm = rand.Uniform(0., PI);
+            // double cos_th = cos(theta_cm);
             double sin_th = sqrt(1 - cos_th * cos_th);
             double phi_cm = rand.Uniform(0., 0. + psf_phi_cm);
 
@@ -316,13 +322,13 @@ int main()
             L_em.SetPxPyPzE(Pl * sin_th * cos(phi_cm), Pl * sin_th * sin(phi_cm), Pl * cos_th, El);
             L_ep.SetPxPyPzE(-Pl * sin_th * cos(phi_cm), -Pl * sin_th * sin(phi_cm), -Pl * cos_th, El);
 
-            cout<<" "<<endl;
+            /*cout<<" "<<endl;
             cout<<"New Event "<<endl;
             cout<<"Before radiation"<<endl;
             cout<<"P electron"<<L_em.P()<<" E electron "<<L_em.E()<<endl;
-            cout<<"P positron"<<L_ep.P()<<" E positron "<<L_ep.E()<<endl;
+            cout<<"P positron"<<L_ep.P()<<" E positron "<<L_ep.E()<<endl;*/
 
-
+            Rad_corr_1.Set_Inv_Mass(sqrt(Q2));
             bool in_rad_tail = (rand.Uniform(0, 1) > Rad_corr_1.Compute_cs_correction_factor(sqrt(Q2))); // randomly choose if the photon is above cut_off_min
             // if(Rad_corr && in_rad_tail)
 
@@ -333,39 +339,37 @@ int main()
                 L_rad_1.SetPxPyPzE(0.0, 0.0, 0.0, 0.0);
                 L_rad_2.SetPxPyPzE(0.0, 0.0, 0.0, 0.0);
             }
-            E_rad_cm = (L_rad_1+L_rad_2).E();
+            E_rad_cm = (L_rad_1 + L_rad_2).E();
 
-            //cout<<(L_em+L_ep+L_rad_1+L_rad_2).P()<<endl;
-            // cout<<Rad_corr_1.Compute_cs_correction_factor(sqrt(Q2))<<endl;
+            Theta_rad_cm = L_rad_1.Theta();
+            Phi_rad_cm = L_rad_1.Phi();
+            Angle_g_lep_cm = L_rad_1.Angle(L_em.Vect());
+            // cout<<(L_em+L_ep+L_rad_1+L_rad_2).P()<<endl;
+            //  cout<<Rad_corr_1.Compute_cs_correction_factor(sqrt(Q2))<<endl;
 
-            cout<<"After radiation"<<endl;
-            cout<<"P electron"<<L_em.P()<<" M electron "<<L_em.M()<<endl;
-            cout<<"P positron"<<L_ep.P()<<" M positron "<<L_ep.M()<<endl;
-            cout<<"M total "<<(L_rad_1+L_rad_2+L_em+L_ep).M()<<endl;
-            cout<<"P total "<<(L_rad_1+L_rad_2+L_em+L_ep).P()<<endl;
-
+            /*cout<<"After radiation"<<endl;
+             cout<<"P electron"<<L_em.P()<<" M electron "<<L_em.M()<<endl;
+             cout<<"P positron"<<L_ep.P()<<" M positron "<<L_ep.M()<<endl;
+             cout<<"M total "<<(L_rad_1+L_rad_2+L_em+L_ep).M()<<endl;
+             cout<<"P total "<<(L_rad_1+L_rad_2+L_em+L_ep).P()<<endl;*/
 
             L_em.RotateY(th_qprime); // Rotate in order to get Z axis be antiparallel to the p_prime direction in the CM frame
             L_ep.RotateY(th_qprime); // Rotate in order to get Z axis be antiparallel to the p_prime direction in the CM frame
             L_rad_1.RotateY(th_qprime);
             L_rad_2.RotateY(th_qprime);
 
-            L_em.Boost(L_gprime.BoostVector());  // Move to the CM Frame
-            L_ep.Boost(L_gprime.BoostVector());  // Move to the CM Frame
+            L_em.Boost(L_gprime.BoostVector());    // Move to the CM Frame
+            L_ep.Boost(L_gprime.BoostVector());    // Move to the CM Frame
             L_rad_1.Boost(L_gprime.BoostVector()); // Move to the CM Frame
             L_rad_2.Boost(L_gprime.BoostVector()); // Move to the CM Frame
 
-            L_em.Boost(Lcm.BoostVector());  // Move to the Lab Frame
-            L_ep.Boost(Lcm.BoostVector());  // Move to the Lab Frame
+            L_em.Boost(Lcm.BoostVector());    // Move to the Lab Frame
+            L_ep.Boost(Lcm.BoostVector());    // Move to the Lab Frame
             L_rad_1.Boost(Lcm.BoostVector()); // Move to the Lab Frame
             L_rad_2.Boost(Lcm.BoostVector()); // Move to the Lab Frame
 
             L_gprime.Boost(Lcm.BoostVector());
             L_prot.Boost(Lcm.BoostVector());
-
-            // cout<<"test = "<<tcs_kin1.GetMM2()<<endl;
-            // cout<<"phi_cm = "<<phi_cm*TMath::RadToDeg()<<"  tcs_kine.GetPhi_cm()"<<tcs_kin1.GetPhi_cm()<<endl;
-            // cout<<"phi_cm = "<<phi_cm*TMath::RadToDeg()<<"  tcs_kine.GetPhi_cm()"<<tcs_kin1.GetPhi_cm()<<endl;
 
             double psf_phi_lab = 2 * PI;
             double phi_rot = rand.Uniform(0., psf_phi_lab);
@@ -377,10 +381,9 @@ int main()
             L_rad_1.RotateZ(phi_rot);
             L_rad_2.RotateZ(phi_rot);
 
-            tcs_kin1.SetLemLepLp(L_em, L_ep, L_prot);
-
-            h_ph_h_ph_cm1->Fill(phi_cm * TMath::RadToDeg(), tcs_kin1.GetPhi_cm());
-            h_th_g_th_cm1->Fill(acos(cos_th) * TMath::RadToDeg(), tcs_kin1.GetTheta_cm());
+            Theta_rad = L_rad_1.Theta();
+            Phi_rad = L_rad_1.Phi();
+            Angle_g_lep = L_rad_1.Angle(L_em.Vect());
 
             psf = psf_t * psf_Eg; // * psf_phi_lab * psf_cos_th * psf_phi_cm ;
 
@@ -400,10 +403,10 @@ int main()
             py_em = L_em.Py();
             pz_em = L_em.Pz();
             E_em = L_em.E();
-            px_rad = (L_rad_1+L_rad_2).Px();
-            py_rad = (L_rad_1+L_rad_2).Py();
-            pz_rad = (L_rad_1+L_rad_2).Pz();
-            E_rad = (L_rad_1+L_rad_2).E();
+            px_rad = (L_rad_1 + L_rad_2).Px();
+            py_rad = (L_rad_1 + L_rad_2).Py();
+            pz_rad = (L_rad_1 + L_rad_2).Pz();
+            E_rad = (L_rad_1 + L_rad_2).E();
             px_rad_em = L_rad_1.Px();
             py_rad_em = L_rad_1.Py();
             pz_rad_em = L_rad_1.Pz();
@@ -414,7 +417,7 @@ int main()
             E_rad_ep = L_rad_2.E();
 
             Inv_Mass = (L_em + L_ep).M();
-            //cout<<Inv_Mass-sqrt((L_em + L_ep).M2())<<endl;
+            // cout<<Inv_Mass-sqrt((L_em + L_ep).M2())<<endl;
 
             double tot_weight = crs_JPsi * psf * flux_factor;
 
