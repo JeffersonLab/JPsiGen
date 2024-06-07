@@ -153,6 +153,8 @@ int main()
     const double Me = 0.00051;
     const double MJPsi = 3.097;
 
+    bool VM_Rad_Corr = true;
+
     Eg_min = MJPsi * (MJPsi + 2 * Mp) / (2 * Mp); // Gev
     Eg_max = Eb;                                  // GeV
     //  const double Minv_min = sqrt(Mp*Mp + 2*Mp*Eg_min ) - Mp;
@@ -168,7 +170,6 @@ int main()
     TF1 *f_JPsi_dsigm_dt = new TF1("f_JPsi_dsigm_dt", JPsi_dsigm_dt, 8.25, 25., 3);
     f_JPsi_dsigm_dt->SetParameter(1, SLAC_Fit_scale);
     f_JPsi_dsigm_dt->SetParameter(2, tSlope);
-
 
     TLorentzVector target(0., 0., 0., Mp);
     TLorentzVector Lcm;
@@ -193,6 +194,7 @@ int main()
     double Eg, Minv, t, Q2;
     double psf, crs_BH, crs_INT, crs_int, crs_JPsi;
     double psf_flux, flux_factor;
+    double weight_rad;
     TLorentzVector L_em, L_ep, L_prot, L_rad_1, L_rad_2;
     TLorentzVector L_gprime;
 
@@ -214,6 +216,7 @@ int main()
     tr1->Branch("Q2", &Q2, "Q2/D");
     tr1->Branch("t", &t, "t/D");
     tr1->Branch("psf", &psf, "psf/D");
+    tr1->Branch("weight_rad", &weight_rad, "weight_rad/D");
     tr1->Branch("flux_factor", &flux_factor, "flux_factor/D");
     tr1->Branch("crs_JPsi", &crs_JPsi, "crs_JPsi/D");
     tr1->Branch("px_prot", &px_prot, "px_prot/D");
@@ -329,10 +332,25 @@ int main()
             cout<<"P positron"<<L_ep.P()<<" E positron "<<L_ep.E()<<endl;*/
 
             Rad_corr_1.Set_Inv_Mass(sqrt(Q2));
-            bool in_rad_tail = (rand.Uniform(0, 1) > Rad_corr_1.Compute_cs_correction_factor(sqrt(Q2))); // randomly choose if the photon is above cut_off_min
-            // if(Rad_corr && in_rad_tail)
 
-            if (Rad_corr && in_rad_tail)
+            bool in_rad_tail = false;
+            weight_rad = 1.0;
+            double weight_additional = 0.0;
+            if (VM_Rad_Corr)
+            {
+                weight_additional = Rad_corr_1.constant_VM_delta(0.0);
+                weight_rad += weight_additional;
+                in_rad_tail = (rand.Uniform(0, 1) > (1 + Rad_corr_1.Compute_cs_correction_factor_VM()));
+            }
+            else
+                in_rad_tail = (rand.Uniform(0, 1) > Rad_corr_1.Compute_cs_correction_factor(sqrt(Q2))); // randomly choose if the photon is above cut_off_min
+
+            // if(Rad_corr && in_rad_tail)
+            if (Rad_corr && in_rad_tail && VM_Rad_Corr)
+            {
+                Rad_corr_1.Soft_Photon_Emission_VM(L_em, L_ep, L_rad_1, L_rad_2);
+            }
+            else if (Rad_corr && in_rad_tail && !VM_Rad_Corr)
                 Rad_corr_1.Soft_Photon_Emission(L_em, L_ep, L_rad_1, L_rad_2);
             else
             {
@@ -419,7 +437,8 @@ int main()
             Inv_Mass = (L_em + L_ep).M();
             // cout<<Inv_Mass-sqrt((L_em + L_ep).M2())<<endl;
 
-            double tot_weight = crs_JPsi * psf * flux_factor;
+    
+            double tot_weight = crs_JPsi * psf * flux_factor * weight_rad;
 
             if (write_root)
             {
@@ -428,7 +447,7 @@ int main()
             else
             {
                 // Writing Header
-                Lund_out << 5 << setw(5) << 1 << setw(5) << 1 << setw(15) << psf << setw(15) << crs_JPsi << setw(15) << 0 << setw(15) << flux_factor << setw(15) << crs_JPsi << setw(15) << psf << setw(15) << tot_weight << endl;
+                Lund_out << 5 << setw(5) << 1 << setw(5) << 1 << setw(15) << psf << setw(15) << crs_JPsi*weight_rad << setw(15) << 0 << setw(15) << flux_factor << setw(15) << crs_JPsi*weight_rad << setw(15) << psf << setw(15) << tot_weight << endl;
                 // Writing Proton
                 Lund_out << 1 << setw(5) << 1 << setw(5) << 1 << setw(7) << 2212 << setw(5) << 0 << setw(5) << 0 << setw(15) << px_prot << setw(15) << py_prot << setw(15) << pz_prot;
                 Lund_out << setw(15) << L_prot.E() << setw(15) << Mp << setw(15) << 0. << setw(15) << 0. << setw(15) << vz << endl;

@@ -9,7 +9,7 @@ vzMax    -0.5
 vzMin    -5.5
 Q2Cut    0.02
 tSlope   1.13
-LUND     0
+LUND     1
 Seed     0
 RAD_CORR 1
 rad_cut_off_min 0.005
