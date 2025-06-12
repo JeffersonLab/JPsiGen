@@ -319,7 +319,7 @@ int main() {
             L_lm.RotateZ(phi_rot);
             L_lp.RotateZ(phi_rot);
                         
-            psf = psf_t;
+            psf = psf_t*psf_Eg;
 
             double eta = Q2 / (2 * (s - Mp * Mp) - Q2);
 
